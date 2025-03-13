@@ -239,7 +239,7 @@ const disperseToken = async (ownerKeypair, mint, wallets, amounts) => {
             tx.sign(bundleItem[j].signers);
 
             const sim = await connection.simulateTransaction(tx);
-            console.log("------------------ simulate  ", i, j, sim);
+            // console.log("------------------ simulate  ", i, j, sim);
 
             verTxns.push(tx);
         }
@@ -260,7 +260,7 @@ const main = async () => {
     const result = await createToken(connection, ownerKeypair, process.env.TOKEN_NAME, process.env.TOKEN_SYMBOL, process.env.TOKEN_URI, process.env.TOKEN_DECIMAL, process.env.TOTAL_SUPPLY);
     if (result) {
         console.log('mint = ', result.mint);
-        const mintAddr = new PublicKey('BGCaoSuWijgTSyZQNecgTpHRE8fnKXpRKTdAZc3gxfP7');
+        const mintAddr = new PublicKey('A1vpqMpYNQkKgde6vdirSDmkNtagCYrstErPqo3Y5esJ');
         const wallets = [
             new PublicKey(process.env.PRIVATE_PRESALE_ADDRESS),
             new PublicKey(process.env.PRESALE_SALE_ADDRESS),
@@ -272,14 +272,14 @@ const main = async () => {
             new PublicKey(process.env.COMMUNITY_REWARDS_ADDRESS)
         ];
         const amounts = [
-            process.env.PRIVATE_PRESALE_AMOUNT * 10 ** process.env.decimals,
-            process.env.PRESALE_SALE_AMOUNT * 10 ** process.env.decimals,
-            process.env.AI_DEVELOPMENT_AMOUNT * 10 ** process.env.decimals,
-            process.env.MARKETING_PARTNERSHIPS_AMOUNT * 10 ** process.env.decimals,
-            process.env.LIQUIDITY_AMOUNT * 10 ** process.env.decimals,
-            process.env.TEAM_AMOUNT * 10 ** process.env.decimals,
-            process.env.TREASURY_AMOUNT * 10 ** process.env.decimals,
-            process.env.COMMUNITY_REWARDS_AMOUNT * 10 ** process.env.decimals,
+            Number(process.env.PRIVATE_PRESALE_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
+            Number(process.env.PRESALE_SALE_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
+            Number(process.env.AI_DEVELOPMENT_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
+            Number(process.env.MARKETING_PARTNERSHIPS_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
+            Number(process.env.LIQUIDITY_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
+            Number(process.env.TEAM_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
+            Number(process.env.TREASURY_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
+            Number(process.env.COMMUNITY_REWARDS_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
         ];
         await disperseToken(ownerKeypair, result.mint, wallets, amounts);
     }
