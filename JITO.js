@@ -37,13 +37,13 @@ export const getTipAccountsWithSDK = async (client) => {
     }
 }
 
-const getRandomNumber = (min, max) => {
+export const getRandomNumber = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
 export const getTipTrx = async (tipPayer) => {
     try {
-        const tipAddrs = await this.getTipAccounts();
+        const tipAddrs = await getTipAccounts();
         const tipAddr = tipAddrs[getRandomNumber(0, tipAddrs.length - 1)]
         const tipAccount = new PublicKey(tipAddr);
 
@@ -51,13 +51,16 @@ export const getTipTrx = async (tipPayer) => {
             SystemProgram.transfer({
                 fromPubkey: tipPayer.publicKey,
                 toPubkey: tipAccount,
-                lamports: LAMPORTS_PER_SOL * 0.005,
+                lamports: LAMPORTS_PER_SOL * 0.0005,
             })
         );
-        const SOLANA_CONNECTION = new Connection(process.env.SOLANA_RPC_URL);
+        const SOLANA_CONNECTION = new Connection(process.env.RPC_URL);
 
         tipTx.recentBlockhash = (await SOLANA_CONNECTION.getLatestBlockhash("finalized")).blockhash;
         tipTx.sign(tipPayer);
+
+        // const sim = await SOLANA_CONNECTION.simulateTransaction(tipTx);
+        // console.log("------------ sim", sim);
 
         return tipTx;
     }
@@ -86,7 +89,7 @@ export const sendBundles = async (transactions) => {
             });
 
             // console.log(rawTransactions)
-
+            console.log('JITO URL = ', process.env.JITO_MAINNET_URL);
             const { data } = await axios.post(`https://${process.env.JITO_MAINNET_URL}/api/v1/bundles`,
                 {
                     jsonrpc: "2.0",
@@ -265,8 +268,8 @@ export const sendBatchBundles = async (transactions) => {
 }
 
 export const sendBundleTrxWithTip = async (transactions, tipPayer) => {
-    const tipTrx = await this.getTipTrx(tipPayer)
-    return await this.sendBundles([[...transactions, tipTrx]]);
+    const tipTrx = await getTipTrx(tipPayer)
+    return await sendBundles([[...transactions, tipTrx]]);
 }
 
 export const sendBundlesWithSDK = async (client, transactions) => {

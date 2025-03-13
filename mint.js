@@ -16,12 +16,14 @@ import {
     createAssociatedTokenAccountInstruction,
     createMintToInstruction,
     createTransferInstruction,
+    getMinimumBalanceForRentExemptMint ,
 } from "@solana/spl-token";
 import {
     LOOKUP_TABLE_CACHE,
 } from "@raydium-io/raydium-sdk";
 import * as metadata from "@metaplex-foundation/mpl-token-metadata";
-import { getTipAccounts, sendBundles } from "./JITO.js";
+import bs58 from 'bs58';
+import { getTipAccounts, sendBundles, getTipTrx, getRandomNumber } from "./JITO.js";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -61,6 +63,7 @@ const createToken = async (connection, ownerKeypair, name, symbol, uri, decimals
         uses: null,
     };
 
+    const lamports = await getMinimumBalanceForRentExemptMint(connection);
     const instructions = [
         SystemProgram.createAccount({
             fromPubkey: ownerPubkey,
@@ -111,15 +114,21 @@ const createToken = async (connection, ownerKeypair, name, symbol, uri, decimals
         recentBlockhash,
         instructions,
     });
-    const transaction = new VersionedTransaction(message.compileToV0Message(Object.values({ ...(addLookupTableInfo ?? {}) })));
+    const transaction = new VersionedTransaction(message.compileToV0Message());
     transaction.sign([ownerKeypair, mintKeypair]);
 
+    // const sim = await connection.simulateTransaction(transaction);
+    // console.log("------------ sim", sim);
+    // return;
+
+    const tipTrx = await getTipTrx(ownerKeypair);
     // send transaction
-    const ret = await sendBundles([[transaction]]);
+    const ret = await sendBundles([[transaction, tipTrx]]);
+    
 
     if (!ret) {
         console.log("Failed to create tokens");
-        dispersed = false;
+        return null;
     }
 
     return { mint: mintKeypair.publicKey, transaction: transaction };
@@ -130,7 +139,7 @@ const disperseToken = async (ownerKeypair, mint, wallets, amounts) => {
     let bundleItems = [];
     let bundleIndex = -1;
 
-    tipAddrs = await getTipAccounts();
+    const tipAddrs = await getTipAccounts();
 
     const signers = [ownerKeypair];
     let index = 0;
@@ -175,7 +184,7 @@ const disperseToken = async (ownerKeypair, mint, wallets, amounts) => {
         }
 
         if (instructions.length > 0) {
-            console.log("Transferring tokens...", from, index, index + count - 1);
+            console.log("Transferring tokens...", index, index + count - 1);
             if (bundleIndex >= 0 && bundleItems[bundleIndex] && bundleItems[bundleIndex].length < 5) {
                 bundleItems[bundleIndex].push({
                     instructions: instructions,
@@ -216,7 +225,7 @@ const disperseToken = async (ownerKeypair, mint, wallets, amounts) => {
                     SystemProgram.transfer({
                         fromPubkey: bundleItem[j].payer,
                         toPubkey: tipAccount,
-                        lamports: LAMPORTS_PER_SOL * jitoTip,
+                        lamports: LAMPORTS_PER_SOL * 0.0005,
                     }),
                     ...bundleItem[j].instructions
                 ];
@@ -246,29 +255,33 @@ const disperseToken = async (ownerKeypair, mint, wallets, amounts) => {
 }
 
 const main = async () => {
-    const result = await createToken(connection, process.env.OWNER_KEYPAIR, process.env.TOKEN_NAME, process.env.TOKEN_SYMBOL, process.env.TOKEN_URI, process.env.TOKEN_DECIMAL, process.env.TOTAL_SUPPLY * process.env.TOKEN_DECIMAL);
-    if (result.mint) {
+    const ownerKeypair = Keypair.fromSecretKey(bs58.decode(process.env.OWNER_KEYPAIR));
+
+    const result = await createToken(connection, ownerKeypair, process.env.TOKEN_NAME, process.env.TOKEN_SYMBOL, process.env.TOKEN_URI, process.env.TOKEN_DECIMAL, process.env.TOTAL_SUPPLY);
+    if (result) {
+        console.log('mint = ', result.mint);
+        const mintAddr = new PublicKey('BGCaoSuWijgTSyZQNecgTpHRE8fnKXpRKTdAZc3gxfP7');
         const wallets = [
-            PRIVATE_PRESALE_ADDRESS,
-            PRESALE_SALE_ADDRESS,
-            AI_DEVELOPMENT_ADDRESS,
-            MARKETING_PARTNERSHIPS_ADDRESS,
-            LIQUIDITY_ADDRESS,
-            TEAM_ADDRESS,
-            TREASURY_ADDRESS,
-            COMMUNITY_REWARDS_ADDRESS
+            new PublicKey(process.env.PRIVATE_PRESALE_ADDRESS),
+            new PublicKey(process.env.PRESALE_SALE_ADDRESS),
+            new PublicKey(process.env.AI_DEVELOPMENT_ADDRESS),
+            new PublicKey(process.env.MARKETING_PARTNERSHIPS_ADDRESS),
+            new PublicKey(process.env.LIQUIDITY_ADDRESS),
+            new PublicKey(process.env.TEAM_ADDRESS),
+            new PublicKey(process.env.TREASURY_ADDRESS),
+            new PublicKey(process.env.COMMUNITY_REWARDS_ADDRESS)
         ];
         const amounts = [
-            PRIVATE_PRESALE_AMOUNT * process.env.TOKEN_DECIMAL,
-            PRESALE_SALE_AMOUNT * process.env.TOKEN_DECIMAL,
-            AI_DEVELOPMENT_AMOUNT * process.env.TOKEN_DECIMAL,
-            MARKETING_PARTNERSHIPS_AMOUNT * process.env.TOKEN_DECIMAL,
-            LIQUIDITY_AMOUNT * process.env.TOKEN_DECIMAL,
-            TEAM_AMOUNT * process.env.TOKEN_DECIMAL,
-            TREASURY_AMOUNT * process.env.TOKEN_DECIMAL,
-            COMMUNITY_REWARDS_AMOUNT * process.env.TOKEN_DECIMAL,
+            process.env.PRIVATE_PRESALE_AMOUNT * 10 ** process.env.decimals,
+            process.env.PRESALE_SALE_AMOUNT * 10 ** process.env.decimals,
+            process.env.AI_DEVELOPMENT_AMOUNT * 10 ** process.env.decimals,
+            process.env.MARKETING_PARTNERSHIPS_AMOUNT * 10 ** process.env.decimals,
+            process.env.LIQUIDITY_AMOUNT * 10 ** process.env.decimals,
+            process.env.TEAM_AMOUNT * 10 ** process.env.decimals,
+            process.env.TREASURY_AMOUNT * 10 ** process.env.decimals,
+            process.env.COMMUNITY_REWARDS_AMOUNT * 10 ** process.env.decimals,
         ];
-        await disperseToken(process.env.OWNER_KEYPAIR, result.mint, wallets, amounts);
+        await disperseToken(ownerKeypair, result.mint, wallets, amounts);
     }
 }
 
