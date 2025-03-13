@@ -1,7 +1,7 @@
 # SPLTokenCreate
  Create SPL Token and disperse tokens to multi wallets on Solana chain
 
- ## Prerequisites
+## Prerequisites
 
 - Node.js (v18+ recommended)
 - Access to a Solana RPC endpoint
