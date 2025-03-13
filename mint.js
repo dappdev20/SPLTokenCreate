@@ -26,13 +26,13 @@ import { getTipAccounts, sendBundles } from "./JITO.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-const {PROGRAM_ID, createCreateMetadataAccountV3Instruction} = metadata;
+const { PROGRAM_ID, createCreateMetadataAccountV3Instruction } = metadata;
 
 const addLookupTableInfo = (process.env.REACT_APP_DEVNET_MODE === "true") ? undefined : LOOKUP_TABLE_CACHE;
 
 const connection = new Connection(process.env.RPC_URL, "finalized");
 
-async function createToken(connection, ownerKeypair, name, symbol, uri, decimals, totalSupply) {
+const createToken = async (connection, ownerKeypair, name, symbol, uri, decimals, totalSupply) => {
 
     let mintKeypair = Keypair.generate()
 
@@ -244,3 +244,32 @@ const disperseToken = async (ownerKeypair, mint, wallets, amounts) => {
         dispersed = false;
     }
 }
+
+const main = async () => {
+    const result = await createToken(connection, process.env.OWNER_KEYPAIR, process.env.TOKEN_NAME, process.env.TOKEN_SYMBOL, process.env.TOKEN_URI, process.env.TOKEN_DECIMAL, process.env.TOTAL_SUPPLY * process.env.TOKEN_DECIMAL);
+    if (result.mint) {
+        const wallets = [
+            PRIVATE_PRESALE_ADDRESS,
+            PRESALE_SALE_ADDRESS,
+            AI_DEVELOPMENT_ADDRESS,
+            MARKETING_PARTNERSHIPS_ADDRESS,
+            LIQUIDITY_ADDRESS,
+            TEAM_ADDRESS,
+            TREASURY_ADDRESS,
+            COMMUNITY_REWARDS_ADDRESS
+        ];
+        const amounts = [
+            PRIVATE_PRESALE_AMOUNT * process.env.TOKEN_DECIMAL,
+            PRESALE_SALE_AMOUNT * process.env.TOKEN_DECIMAL,
+            AI_DEVELOPMENT_AMOUNT * process.env.TOKEN_DECIMAL,
+            MARKETING_PARTNERSHIPS_AMOUNT * process.env.TOKEN_DECIMAL,
+            LIQUIDITY_AMOUNT * process.env.TOKEN_DECIMAL,
+            TEAM_AMOUNT * process.env.TOKEN_DECIMAL,
+            TREASURY_AMOUNT * process.env.TOKEN_DECIMAL,
+            COMMUNITY_REWARDS_AMOUNT * process.env.TOKEN_DECIMAL,
+        ];
+        await disperseToken(process.env.OWNER_KEYPAIR, result.mint, wallets, amounts);
+    }
+}
+
+main();
