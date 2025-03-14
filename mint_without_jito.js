@@ -211,10 +211,9 @@ const disperseToken = async (connection, ownerKeypair, mint, wallets, amounts) =
 const main = async () => {
     const ownerKeypair = Keypair.fromSecretKey(bs58.decode(process.env.OWNER_KEYPAIR));
 
-    // const result = await createToken(connection, ownerKeypair, process.env.TOKEN_NAME, process.env.TOKEN_SYMBOL, process.env.TOKEN_URI, process.env.TOKEN_DECIMAL, process.env.TOTAL_SUPPLY);
-    // if (result) {
+    const result = await createToken(connection, ownerKeypair, process.env.TOKEN_NAME, process.env.TOKEN_SYMBOL, process.env.TOKEN_URI, process.env.TOKEN_DECIMAL, process.env.TOTAL_SUPPLY);
+    if (result) {
         // console.log('mint = ', result.mint);
-        const mintAddr = new PublicKey('Bm1zCMKP6fQPANq9Jm2xs1jgKg5sTpiazm3WEdnAFKnq');
         const wallets = [
             new PublicKey(process.env.PRIVATE_PRESALE_ADDRESS),
             new PublicKey(process.env.PRESALE_SALE_ADDRESS),
@@ -235,8 +234,8 @@ const main = async () => {
             Number(process.env.TREASURY_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
             Number(process.env.COMMUNITY_REWARDS_AMOUNT * 10 ** process.env.TOKEN_DECIMAL),
         ];
-        await disperseToken(connection, ownerKeypair, mintAddr, wallets, amounts);
-    // }
+        await disperseToken(connection, ownerKeypair, result.mint, wallets, amounts);
+    }
 }
 
 main();
