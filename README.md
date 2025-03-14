@@ -49,3 +49,11 @@ The project uses environment variables for configuration. Key settings include:
 | `TEAM_AMOUNT` | Token amount of Team wallet |
 | `TREASURY_AMOUNT` | Token amount of Treasury wallet |
 | `COMMUNITY_REWARDS_AMOUNT` | Token amount of Community Rewards wallet |
+
+## Create metadata
+1. Go to the https://pinata.cloud and create a new account.
+2. Upload the symbol image to the cloud and get the iamge url(https://green-tragic-peafowl-28.mypinata.cloud/ipfs/QmSYtRcHDXGXSLcxegT4KPgRA9cBSgaC2MjXoiwHPrXVHD).
+   The image url is used in json file.
+4. Make the json file with the following format.
+   {"name":"BonkersMemeToken","symbol":"$Bonkers","description":"$Bonkers is a super viral meme coin based on a charismatic French Bulldog working as an overlord of his truly unruly tribal minions fighting amongst each other to please him. Buy, HODL, and join a tribe.","image":"https://green-tragic-peafowl-28.mypinata.cloud/ipfs/QmSYtRcHDXGXSLcxegT4KPgRA9cBSgaC2MjXoiwHPrXVHD"}
+5. Upload the json file to the cloud.
